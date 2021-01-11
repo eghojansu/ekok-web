@@ -118,6 +118,9 @@ describe('Ekok\Web\Fw', function() {
             'parameters' => array(),
         ));
 
+        $this->fw['PATH'] = '/unknown';
+        expect($this->fw->findRoute())->to->be->equal(null);
+
         // manual find routes
         expect($this->fw->findMatchedRoutes('/data/1'))->to->be->equal(array(
             array(

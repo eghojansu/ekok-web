@@ -263,7 +263,7 @@ class Fw implements \ArrayAccess
             return intval($b['options']['priority'] ?? 0) <=> intval($a['options']['priority'] ?? 0);
         });
 
-        return reset($satisfied);
+        return $satisfied ? reset($satisfied) : null;
     }
 
     public function findMatchedRoutes(string $findPath): array
