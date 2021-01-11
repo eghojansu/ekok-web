@@ -1,0 +1,26 @@
+{
+    "name": "eghojansu/web",
+    "description": "PHP Web helper",
+    "license": "MIT",
+    "type": "library",
+    "keywords": ["php", "helper"],
+    "authors": [
+        {
+            "name": "Eko Kurniawan",
+            "email": "ekokurniawanbs@gmail.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Ekok\\Web\\": "src/"
+        }
+    },
+    "require": {
+        "php": "^7.2"
+    },
+    "require-dev": {
+        "peridot-php/peridot": "^1.19",
+        "peridot-php/peridot-code-coverage-reporters": "^3.0",
+        "peridot-php/leo": "^1.6"
+    }
+}
