@@ -93,7 +93,7 @@ class Fw implements \ArrayAccess
         $secure = 'on' === ($server['HTTPS'] ?? $headers['X-Forwarded-Ssl'] ?? null) || 'https' === ($headers['X-Forwarded-Proto'] ?? null);
         $scheme = $secure ? 'https' : 'http';
         $baseUrl = $scheme . '://' . $host . ':' . $port;
-        $basePath = '/';
+        $basePath = '';
         $entry = '';
         $sessionStarted = isset($session) && $session;
         $ajax = 'XMLHttpRequest' === ($headers['X-Requested-With'] ?? null);
@@ -227,6 +227,72 @@ class Fw implements \ArrayAccess
     public function getRoutes(): array
     {
         return $this->routes;
+    }
+
+    public function alias(string $alias, array $parameters = null): string
+    {
+        $path = $this->aliases[$alias] ?? null;
+
+        if (!$path) {
+            throw new \LogicException("Route not found: {$alias}.");
+        }
+
+        $result = $path;
+        $restParameters = $parameters;
+
+        if (false !== strpos($path, '@')) {
+            $used = array();
+            $defaults = $this->routes[$path][0]['defaults'] ?? null;
+            $result = preg_replace_callback('~(?:@([\w]+)([*])?)~', static function ($match) use ($alias, $parameters, $defaults, &$used) {
+                $name = $match[1];
+                $modifier = $match[2] ?? null;
+                $value = $parameters[$name] ?? $defaults[$name] ?? null;
+                $used[$name] = true;
+
+                if ($modifier) {
+                    return is_array($value) ? implode('/', array_map('urlencode', $value)) : urlencode((string) ($value ?? ''));
+                }
+
+                if (null === $value || '' === $value) {
+                    throw new \InvalidArgumentException("Route parameter is required: {$alias}@{$name}.");
+                }
+
+                return urlencode((string) $value);
+            }, $path);
+            $restParameters = $parameters && $used ? array_diff_key($parameters, $used) : $parameters;
+        }
+
+        if ($restParameters) {
+            $result .= '?' . http_build_query($restParameters);
+        }
+
+        return $result;
+    }
+
+    public function path(string $path, array $parameters = null): string
+    {
+        $prefix = $this->values['BASE_PATH'];
+
+        if ($this->values['ENTRY_SCRIPT']) {
+            $prefix .= '/' . $this->values['ENTRY'];
+        }
+
+        if (isset($this->aliases[$path])) {
+            return $prefix . $this->alias($path, $parameters);
+        }
+
+        if ('/' !== $path[0]) {
+            $prefix .= '/';
+        }
+
+        $queryString = $parameters ? '?' . http_build_query($parameters) : null;
+
+        return $prefix . $path . $queryString;
+    }
+
+    public function asset(string $path): string
+    {
+        return $this->values['BASE_PATH'] . ('/' === $path[0] ? $path : '/' . $path);
     }
 
     public function route(string $definition, $controller, array $options = null): Fw

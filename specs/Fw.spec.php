@@ -158,4 +158,31 @@ describe('Ekok\Web\Fw', function() {
             ),
         ));
     });
+
+    it('should able to build route', function() {
+        $this->fw['BASE_PATH'] = '/base';
+        $this->fw['ENTRY_SCRIPT'] = true;
+        $this->fw['ENTRY'] = 'test.php';
+
+        $this->fw->route('GET foo /foo/@bar', 'none');
+        $this->fw->route('GET bar /foo/@bar*', 'none');
+        $this->fw->route('GET baz /foo/baz', 'none');
+
+        expect($this->fw->alias('foo', array('bar' => 'baz', 'rest' => 1)))->to->be->equal('/foo/baz?rest=1');
+        expect($this->fw->alias('bar', array('bar' => array('baz', 'qux'))))->to->be->equal('/foo/baz/qux');
+        expect($this->fw->alias('baz', array('bar' => 'baz')))->to->be->equal('/foo/baz?bar=baz');
+        expect(function() {
+            $this->fw->alias('unknown');
+        })->to->throw('LogicException', "Route not found: unknown.");
+        expect(function () {
+            $this->fw->alias('foo');
+        })->to->throw('InvalidArgumentException', "Route parameter is required: foo@bar.");
+
+        expect($this->fw->path('foo', array('bar' => 'baz', 'rest' => 1)))->to->be->equal('/base/test.php/foo/baz?rest=1');
+        expect($this->fw->path('baz', array('bar' => 'baz')))->to->be->equal('/base/test.php/foo/baz?bar=baz');
+        expect($this->fw->path('unknown', array('bar' => 'baz')))->to->be->equal('/base/test.php/unknown?bar=baz');
+
+        expect($this->fw->asset('asset'))->to->be->equal('/base/asset');
+        expect($this->fw->asset('/asset'))->to->be->equal('/base/asset');
+    });
 });
