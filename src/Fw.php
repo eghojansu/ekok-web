@@ -112,7 +112,7 @@ class Fw implements \ArrayAccess
         }
 
         if (isset($server['SCRIPT_NAME'])) {
-            $basePath = strtr(dirname($server['SCRIPT_NAME']), '\\', '/');
+            $basePath = rtrim(strtr(dirname($server['SCRIPT_NAME']), '\\', '/'), '/');
             $entry = basename($server['SCRIPT_NAME']);
         }
 
