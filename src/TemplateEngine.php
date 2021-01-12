@@ -163,10 +163,10 @@ class TemplateEngine
         return $result;
     }
 
-    public function escape(string $data, string $functions = null): string
+    public function escape(?string $data, string $functions = null): string
     {
         $useData = $functions ? $this->chain($data, $functions) : $data;
 
-        return htmlspecialchars($useData, $this->options['escapeFlags'], $this->options['escapeEncoding']);
+        return htmlspecialchars($useData ?? '', $this->options['escapeFlags'], $this->options['escapeEncoding']);
     }
 }
