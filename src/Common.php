@@ -98,4 +98,15 @@ class Common
     {
         return rtrim(strtr($str, '\\', '/'), '/') . ($ensureSlash ? '/' : '');
     }
+
+    public static function loadFile(string $file)
+    {
+        $load = static function () {
+            if (file_exists(func_get_arg(0))) {
+                return require func_get_arg(0);
+            }
+        };
+
+        return $load($file);
+    }
 }

@@ -184,14 +184,8 @@ class Container
 
     public function loadFiles(string ...$files): Container
     {
-        $load = static function() {
-            if (file_exists(func_get_arg(1))) {
-                (func_get_arg(0))->setAll((array) require func_get_arg(1));
-            }
-        };
-
         foreach ($files as $file) {
-            $load($this, $file);
+            $this->setAll((array) Common::loadFile($file));
         }
 
         return $this;

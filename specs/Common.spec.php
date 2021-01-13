@@ -63,4 +63,21 @@ describe('Ekok\Web\Common', function() {
         expect(Common::fixSlashes('\\foo\\bar\\'))->to->be->equal('/foo/bar');
         expect(Common::fixSlashes('\\foo\\bar', true))->to->be->equal('/foo/bar/');
     });
+
+    it('can load file without $this reference', function () {
+        expect(Common::loadFile(__DIR__.'/fixtures/data.php'))->to->be->equal(array('foo' => 'bar'));
+
+        try {
+            $message = null;
+            $exception = null;
+
+            Common::loadFile(__DIR__ . '/fixtures/access_this.php');
+        } catch(\Throwable $e) {
+            $message = $e->getMessage();
+            $exception = get_class($e);
+        }
+
+        expect($exception)->to->be->equal('Error');
+        expect($message)->to->be->equal('Using $this when not in object context');
+    });
 });
