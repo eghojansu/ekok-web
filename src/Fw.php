@@ -290,6 +290,8 @@ class Fw implements \ArrayAccess
         return $result;
     }
 
+
+
     public function baseUrl(string $path = null): string
     {
         $result = $this->values['BASE_URL'];
@@ -298,7 +300,7 @@ class Fw implements \ArrayAccess
             $result .= '/';
         }
 
-        $result .= rtrim($this->values['BASE_PATH'], '/');
+        $result = rtrim($result . $this->values['BASE_PATH'], '/');
 
         if ($path) {
             $result .= rtrim('/' === $path[0] ? $path : '/' . $path, '/');
@@ -319,7 +321,7 @@ class Fw implements \ArrayAccess
             $prefix .= '/';
         }
 
-        $prefix .= rtrim($this->values['BASE_PATH'], '/');
+        $prefix = rtrim($prefix . $this->values['BASE_PATH'], '/');
 
         return $prefix . rtrim('/' === $path[0] ? $path : '/' . $path, '/');
     }
@@ -332,7 +334,7 @@ class Fw implements \ArrayAccess
             $prefix .= '/';
         }
 
-        $prefix .= rtrim($this->values['BASE_PATH'], '/');
+        $prefix = rtrim($prefix . $this->values['BASE_PATH'], '/');
 
         if ($this->values['ENTRY_SCRIPT'] && $this->values['ENTRY']) {
             $prefix .= '/' . $this->values['ENTRY'];
