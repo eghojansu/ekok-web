@@ -194,4 +194,19 @@ describe('Ekok\Web\Fw', function() {
 
         expect($this->fw->url('foo', array('bar' => 'baz', 'rest' => 1)))->to->be->equal('http://localhost/base/test.php/foo/baz?rest=1');
     });
+
+    it('can be extended', function() {
+        $this->fw->extend('foo', function() {
+            return count(func_get_args());
+        });
+        $this->fw->extend('bar', function($fw) {
+            return get_class($fw);
+        }, true);
+
+        expect($this->fw->foo(1, 2, 3))->to->be->equal(3);
+        expect($this->fw->bar())->to->be->equal(Fw::class);
+        expect(function () {
+            $this->fw->unknown();
+        })->to->throw('BadMethodCallException', "Extension method not exists: unknown.");
+    });
 });
