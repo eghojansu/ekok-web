@@ -86,7 +86,7 @@ class Fw implements \ArrayAccess
         }, array()) : array();
         $method = $server['REQUEST_METHOD'] ?? 'GET';
         $contentMime = $headers['Content-Type'] ?? $server['CONTENT_TYPE'] ?? '*/*';
-        $contentType = self::$mimes[$contentMime] ?? 'any';
+        $contentType = static::$mimes[$contentMime] ?? 'any';
         $protocol = $server['SERVER_PROTOCOL'] ?? 'HTTP/1.1';
         $port = intval($server['SERVER_PORT'] ?? 80);
         $host = strstr(($headers['Host'] ?? $server['SERVER_NAME'] ?? 'localhost') . ':', ':', true);
@@ -269,19 +269,59 @@ class Fw implements \ArrayAccess
         return $result;
     }
 
-    public function path(string $path, array $parameters = null): string
+    public function baseUrl(string $path = null): string
     {
-        $prefix = $this->values['BASE_PATH'];
+        $result = $this->values['BASE_URL'];
 
-        if ($this->values['ENTRY_SCRIPT']) {
+        if (!$this->values['BASE_PATH'] || '/' !== $this->values['BASE_PATH'][0]) {
+            $result .= '/';
+        }
+
+        $result .= rtrim($this->values['BASE_PATH'], '/');
+
+        if ($path) {
+            $result .= rtrim('/' === $path[0] ? $path : '/' . $path, '/');
+        }
+
+        return $result;
+    }
+
+    public function asset(string $path): string
+    {
+        if (!$path) {
+            throw new \LogicException('Empty path!');
+        }
+
+        $prefix = '';
+
+        if (!$this->values['BASE_PATH'] || '/' !== $this->values['BASE_PATH'][0]) {
+            $prefix .= '/';
+        }
+
+        $prefix .= rtrim($this->values['BASE_PATH'], '/');
+
+        return $prefix . rtrim('/' === $path[0] ? $path : '/' . $path, '/');
+    }
+
+    public function path(string $path = null, array $parameters = null): string
+    {
+        $prefix = '';
+
+        if (!$this->values['BASE_PATH'] || '/' !== $this->values['BASE_PATH'][0]) {
+            $prefix .= '/';
+        }
+
+        $prefix .= rtrim($this->values['BASE_PATH'], '/');
+
+        if ($this->values['ENTRY_SCRIPT'] && $this->values['ENTRY']) {
             $prefix .= '/' . $this->values['ENTRY'];
         }
 
-        if (isset($this->aliases[$path])) {
+        if ($path && isset($this->aliases[$path])) {
             return $prefix . $this->alias($path, $parameters);
         }
 
-        if ('/' !== $path[0]) {
+        if ($path && '/' !== $path[0]) {
             $prefix .= '/';
         }
 
@@ -290,9 +330,9 @@ class Fw implements \ArrayAccess
         return $prefix . $path . $queryString;
     }
 
-    public function asset(string $path): string
+    public function url(string $path, array $parameters = null): string
     {
-        return $this->values['BASE_PATH'] . ('/' === $path[0] ? $path : '/' . $path);
+        return $this->values['BASE_URL'] . $this->path($path, $parameters);
     }
 
     public function route(string $definition, $controller, array $options = null): Fw

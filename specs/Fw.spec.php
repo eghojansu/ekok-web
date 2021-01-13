@@ -160,13 +160,17 @@ describe('Ekok\Web\Fw', function() {
     });
 
     it('should able to build route', function() {
-        $this->fw['BASE_PATH'] = '/base';
+        $this->fw['BASE_PATH'] = 'base';
         $this->fw['ENTRY_SCRIPT'] = true;
         $this->fw['ENTRY'] = 'test.php';
 
         $this->fw->route('GET foo /foo/@bar', 'none');
         $this->fw->route('GET bar /foo/@bar*', 'none');
         $this->fw->route('GET baz /foo/baz', 'none');
+
+        expect($this->fw->baseUrl())->to->be->equal('http://localhost/base');
+        expect($this->fw->baseUrl('/path'))->to->be->equal('http://localhost/base/path');
+        expect($this->fw->baseUrl('path'))->to->be->equal('http://localhost/base/path');
 
         expect($this->fw->alias('foo', array('bar' => 'baz', 'rest' => 1)))->to->be->equal('/foo/baz?rest=1');
         expect($this->fw->alias('bar', array('bar' => array('baz', 'qux'))))->to->be->equal('/foo/baz/qux');
@@ -184,5 +188,10 @@ describe('Ekok\Web\Fw', function() {
 
         expect($this->fw->asset('asset'))->to->be->equal('/base/asset');
         expect($this->fw->asset('/asset'))->to->be->equal('/base/asset');
+        expect(function () {
+            $this->fw->asset('');
+        })->to->throw('LogicException', "Empty path!");
+
+        expect($this->fw->url('foo', array('bar' => 'baz', 'rest' => 1)))->to->be->equal('http://localhost/base/test.php/foo/baz?rest=1');
     });
 });
