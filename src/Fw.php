@@ -474,7 +474,7 @@ class Fw implements \ArrayAccess
 
             unset($_SESSION[$this->values['SESSION_KEY']]);
         } elseif (!$this->values['SESSION_STARTED'] && PHP_SESSION_NONE === session_status()) {
-            session_start();
+            headers_sent() || session_start();
 
             $this->values['SESSION_STARTED'] = true;
             $this->values['SESSION'] = &$_SESSION[$this->values['SESSION_KEY']];
