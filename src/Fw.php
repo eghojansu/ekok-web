@@ -436,6 +436,15 @@ class Fw implements \ArrayAccess
         return null;
     }
 
+    public function commitSession(bool $regenerate = false): void
+    {
+        $_SESSION[$this->values['SESSION_KEY']] = $this->values['SESSION'];
+
+        if ($regenerate) {
+            session_regenerate_id();
+        }
+    }
+
     protected function findMatchedRoutesForPath(string $path, array $routes, string $findPath): array
     {
         $found = array();
@@ -459,9 +468,7 @@ class Fw implements \ArrayAccess
     protected function _refSession(string $action = null): void
     {
         if ('set' === $action) {
-            $_SESSION[$this->values['SESSION_KEY']] = $this->values['SESSION'];
-
-            session_regenerate_id();
+            $this->commitSession(true);
         } elseif ('unset' === $action) {
             $this->values['SESSION'] = null;
 
