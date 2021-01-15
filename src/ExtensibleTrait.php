@@ -25,7 +25,7 @@ trait ExtensibleTrait
         return $this->extensions;
     }
 
-    public function extend(string $name, callable $function, bool $wantThis = false): Fw
+    public function extend(string $name, callable $function, bool $wantThis = false)
     {
         $this->extensions[$name] = array($function, $wantThis);
 
