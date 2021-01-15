@@ -4,6 +4,8 @@ namespace Ekok\Web;
 
 class Container
 {
+    use ExtensibleTrait;
+
     protected $values = array();
     protected $keys = array();
     protected $raw = array();

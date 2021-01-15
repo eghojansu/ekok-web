@@ -4,6 +4,8 @@ namespace Ekok\Web;
 
 class Fw implements \ArrayAccess
 {
+    use ExtensibleTrait;
+
     const HTTP_100 = "Continue";
     const HTTP_101 = "Switching Protocols";
     const HTTP_103 = "Early Hints";
@@ -69,7 +71,6 @@ class Fw implements \ArrayAccess
     protected $keys = array();
     protected $routes = array();
     protected $aliases = array();
-    protected $extensions = array();
 
     public function __construct(
         array $post = null,
@@ -178,19 +179,6 @@ class Fw implements \ArrayAccess
         return new static($_POST, $_GET, $_FILES, $_COOKIE, $_SERVER, $_ENV);
     }
 
-    public function __call($name, $arguments)
-    {
-        $extensions = $this->extensions[strtolower($name)] ?? null;
-
-        if (!$extensions) {
-            throw new \BadMethodCallException("Extension method not exists: {$name}.");
-        }
-
-        list($call, $wantThis) = $extensions;
-
-        return $wantThis ? $call($this, ...$arguments) : $call(...$arguments);
-    }
-
     public function offsetExists($offset)
     {
         $this->doRef($offset);
@@ -226,13 +214,6 @@ class Fw implements \ArrayAccess
         unset($this->values[$offset], $this->keys[$offset]);
 
         $this->doRef($offset, 'unset');
-    }
-
-    public function extend(string $name, callable $function, bool $wantThis = false): Fw
-    {
-        $this->extensions[strtolower($name)] = array($function, $wantThis);
-
-        return $this;
     }
 
     public function getValues(): array

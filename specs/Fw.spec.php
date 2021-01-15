@@ -208,5 +208,6 @@ describe('Ekok\Web\Fw', function() {
         expect(function () {
             $this->fw->unknown();
         })->to->throw('BadMethodCallException', "Extension method not exists: unknown.");
+        expect($this->fw->getExtensions())->to->be->length(2);
     });
 });
