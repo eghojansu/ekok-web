@@ -196,10 +196,10 @@ describe('Ekok\Web\Fw', function() {
     });
 
     it('can be extended', function() {
-        $this->fw->extend('foo', function() {
+        $this->fw->addExtension('foo', function() {
             return count(func_get_args());
         });
-        $this->fw->extend('bar', function($fw) {
+        $this->fw->addExtension('bar', function($fw) {
             return get_class($fw);
         }, true);
 

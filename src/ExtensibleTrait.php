@@ -37,7 +37,7 @@ trait ExtensibleTrait
         return $fixed && isset($this->extensions[$fixed]);
     }
 
-    public function extend(string $name, callable $function, bool $wantThis = false)
+    public function addExtension(string $name, callable $function, bool $wantThis = false)
     {
         $this->extensions[$name] = array($function, $wantThis);
 
