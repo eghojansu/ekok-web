@@ -20,7 +20,7 @@ final class ContainerValueIterator implements \Iterator
 
     public function current()
     {
-        return $this->container->get(current($this->keys));
+        return $this->container[current($this->keys)];
     }
 
     public function key()

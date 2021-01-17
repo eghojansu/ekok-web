@@ -15,9 +15,12 @@ describe('Ekok\Web\Fw', function() {
             'IP' => false,
             'AJAX' => false,
         );
-        $actual = array_intersect_key($expected, $fw->getValues());
+        $expectedKeys = array_keys($expected);
+        $actual = array_intersect_key($expected, $fw->values());
+        $actualKeys = array_intersect($expectedKeys, $fw->keys());
 
         expect($actual)->to->be->equal($expected);
+        expect($actualKeys)->to->be->equal($expectedKeys);
     });
 
     it('should resolve given parameters', function() {
@@ -34,7 +37,7 @@ describe('Ekok\Web\Fw', function() {
             'IP' => '168.1.1.1',
             'AJAX' => true,
         );
-        $actual = array_intersect_key($expected, $fw->getValues());
+        $actual = array_intersect_key($expected, $fw->values());
 
         expect($actual)->to->be->equal($expected);
     });
@@ -87,8 +90,8 @@ describe('Ekok\Web\Fw', function() {
         $this->fw->route('GET /parameter-eater2/@data*/@extra1/@extra2', 'eater');
         $this->fw->route('GET /requirement/@id', 'requirement', array('requirements' => array('id' => '\d+')));
 
-        $routes = $this->fw->getRoutes();
-        $aliases = $this->fw->getAliases();
+        $routes = $this->fw->routes();
+        $aliases = $this->fw->aliases();
 
         expect($aliases)->to->be->include->keys(array('home', 'data'));
         expect($routes)->to->have->length(6);
@@ -193,21 +196,5 @@ describe('Ekok\Web\Fw', function() {
         })->to->throw('LogicException', "Empty path!");
 
         expect($this->fw->url('foo', array('bar' => 'baz', 'rest' => 1)))->to->be->equal('http://localhost/base/test.php/foo/baz?rest=1');
-    });
-
-    it('can be extended', function() {
-        $this->fw->addExtension('foo', function() {
-            return count(func_get_args());
-        });
-        $this->fw->addExtension('bar', function($fw) {
-            return get_class($fw);
-        }, true);
-
-        expect($this->fw->foo(1, 2, 3))->to->be->equal(3);
-        expect($this->fw->bar())->to->be->equal(Fw::class);
-        expect(function () {
-            $this->fw->unknown();
-        })->to->throw('BadMethodCallException', "Extension method not exists: unknown.");
-        expect($this->fw->getExtensions())->to->be->length(2);
     });
 });

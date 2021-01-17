@@ -4,8 +4,6 @@ namespace Ekok\Web;
 
 class Fw implements \ArrayAccess
 {
-    use ExtensibleTrait;
-
     const HTTP_100 = "Continue";
     const HTTP_101 = "Switching Protocols";
     const HTTP_103 = "Early Hints";
@@ -216,17 +214,22 @@ class Fw implements \ArrayAccess
         $this->doRef($offset, 'unset');
     }
 
-    public function getValues(): array
+    public function keys(): array
+    {
+        return array_keys($this->keys);
+    }
+
+    public function values(): array
     {
         return $this->values;
     }
 
-    public function getAliases(): array
+    public function aliases(): array
     {
         return $this->aliases;
     }
 
-    public function getRoutes(): array
+    public function routes(): array
     {
         return $this->routes;
     }
@@ -270,8 +273,6 @@ class Fw implements \ArrayAccess
 
         return $result;
     }
-
-
 
     public function baseUrl(string $path = null): string
     {
