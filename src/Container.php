@@ -137,7 +137,7 @@ class Container implements \ArrayAccess
     public function simple($key, string $class, bool $addAlias = true): Container
     {
         $this[$key] = static function(Container $self) use ($class) {
-            return new $class($self);
+            return method_exists($class, '__construct') ? new $class($self) : new $class();
         };
 
         if ($addAlias) {
