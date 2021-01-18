@@ -4,194 +4,169 @@ namespace Ekok\Web;
 
 class Template
 {
-    protected $engine;
-    protected $parent;
-    protected $name;
-    protected $filepath;
-    protected $data = array();
-    protected $search = array();
-    protected $sections = array();
-    protected $sectioning;
-    protected $sectioningMode;
+    protected $directories = array();
+    protected $functions = array();
+    protected $internals = array(
+        'chain',
+        'escape',
+        'esc' => 'escape',
+        'e' => 'escape',
+    );
+    protected $globals = array();
+    protected $options = array(
+        'extension' => 'php',
+        'escapeFlags' => ENT_QUOTES|ENT_HTML401|ENT_SUBSTITUTE,
+        'escapeEncoding' => 'UTF-8',
+    );
 
-    public function __construct(TemplateEngine $engine, string $name, array $data = null)
+    public function __construct(array $directories = null, array $options = null)
     {
-        $this->engine = $engine;
-        $this->name = $name;
-        $this->data = $data ?? array();
+        $this->setDirectories($directories ?? array());
+        $this->setOptions($options ?? array());
     }
 
     public function __call($name, $arguments)
     {
-        return $this->engine->$name(...$arguments);
-    }
-
-    public function getEngine(): TemplateEngine
-    {
-        return $this->engine;
-    }
-
-    public function getName(): string
-    {
-        return $this->name;
-    }
-
-    public function getFilepath(): string
-    {
-        return $this->filepath ?? ($this->filepath = $this->engine->findPath($this->name));
-    }
-
-    public function render(): string
-    {
-        $_ = $this;
-        $level = ob_get_level();
-        $load = static function() use ($_) {
-            extract($_->getEngine()->getGlobals());
-            extract(func_get_arg(1));
-            require func_get_arg(0);
-        };
-        $clean = static function() use ($level) {
-            while (ob_get_level() > $level) {
-                ob_end_clean();
-            }
-        };
-
-        try {
-            ob_start();
-            $load($this->getFilepath(), $this->data);
-            $content = ob_get_clean();
-
-            if ($this->parent) {
-                list($template, $data) = $this->parent;
-                $parent = $this->engine->createTemplate($template, $data + $this->data);
-                $parent->merge(compact('content') + $this->sections);
-                $content = $parent->render();
-
-                return $this->search ? $parent->replace($content, $this->search) : $content;
-            }
-
-            return $content;
-        } catch (\Throwable $error) {
-            $clean();
-
-            throw $error;
-        }
-    }
-
-    public function load(string $view, array $data = null): string
-    {
-        $template = $this->engine->createTemplate($view, array_merge($this->data ?? array(), $data ?? array()));
-
-        if ($template->getFilepath() === $this->getFilepath()) {
-            throw new \LogicException("Recursive view rendering is not supported.");
+        if (isset($this->functions[$name])) {
+            return ($this->functions[$name])(...$arguments);
         }
 
-        return $template->render();
-    }
+        if (isset($this->internals[$name]) || (false !== $found = array_search($name, $this->internals))) {
+            $call = $this->internals[$name] ?? $this->internals[$found];
 
-    public function loadIfExists(string $view, array $data = null, string $default = null): ?string
-    {
-        try {
-            return $this->load($view, $data);
-        } catch (\Exception $error) {
-            return $default;
+            return $this->$call(...$arguments);
         }
+
+        if (function_exists($name)) {
+            return $name(...$arguments);
+        }
+
+        throw new \BadFunctionCallException("Function is not found at any context: {$name}.");
     }
 
-    public function addData(string $name, $value): Template
+    public function createTemplate(string $template, array $data = null)
     {
-        $this->data[$name] = $value;
+        return new TemplateContext($this, $template, $data);
+    }
+
+    public function render(string $template, array $data = null)
+    {
+        return $this->createTemplate($template, $data)->render();
+    }
+
+    public function getOptions(): array
+    {
+        return $this->options;
+    }
+
+    public function setOptions(array $options): Template
+    {
+        $this->options = array_merge($this->options, array_intersect_key($options, $this->options));
 
         return $this;
     }
 
-    public function extend(string $parent, array $data = null): void
+    public function getDirectories(): array
     {
-        $this->parent = array($parent, $data ?? array());
+        return $this->directories;
     }
 
-    public function parent(): void
+    public function setDirectory(string $directory, string $name = null): Template
     {
-        if (!$this->sectioning) {
-            throw new \LogicException("Calling parent when not in section context is forbidden.");
+        $this->directories[$name ?? 'default'][] = Common::fixSlashes($directory, true);
+
+        return $this;
+    }
+
+    public function setDirectories(array $directories): Template
+    {
+        foreach ($directories as $name => $directory) {
+            $this->setDirectory($directory, is_numeric($name) ? null : $name);
         }
 
-        echo '__parent__';
+        return $this;
     }
 
-    public function insert(string $sectionName, string $prefix = 'section__'): void
+    public function getGlobals(): array
     {
-        $key = $prefix . mt_rand(100, 999) . '_' . mt_rand(100, 999);
-        $this->search[$key] = $sectionName;
-        echo $key;
+        return $this->globals;
     }
 
-    public function exists(string $sectionName = 'content'): bool
+    public function addGlobal(string $name, $value): Template
     {
-        return isset($this->sections[$sectionName]);
+        $this->globals[$name] = $value;
+
+        return $this;
     }
 
-    public function merge(array $sections): void
+    public function setGlobals(array $globals): Template
     {
-        foreach ($sections as $sectionName => $content) {
-            $this->sections[$sectionName] = $content;
-        }
-    }
-
-    public function section(string $sectionName = 'content', string $default = null): ?string
-    {
-        return $this->sections[$sectionName] ?? $default;
-    }
-
-    public function start(string $sectionName): void
-    {
-        if ('content' === $sectionName) {
-            throw new \LogicException("Section name is reserved: {$sectionName}.");
+        foreach ($globals as $name => $value) {
+            $this->addGlobal($name, $value);
         }
 
-        if ($this->sectioning) {
-            throw new \LogicException("Nested section is not supported.");
-        }
-
-        $this->sectioning = $sectionName;
-
-        ob_start();
+        return $this;
     }
 
-    public function end(bool $flush = false): void
+    public function addFunction(string $name, callable $function): Template
     {
-        if (!$this->sectioning) {
-            throw new \LogicException("No section has been started.");
+        $this->functions[$name] = $function;
+
+        return $this;
+    }
+
+    public function findPath(string $template): string
+    {
+        list($directories, $file) = $this->getTemplateDirectories($template);
+
+        foreach ($directories as $directory) {
+            if (
+                file_exists($filepath = $directory . $file)
+                || file_exists($filepath = $directory . $file . '.' . $this->options['extension'])
+            ) {
+                return $filepath;
+            }
         }
 
-        if (isset($this->sections[$this->sectioning])) {
-            $this->sections[$this->sectioning] = strtr($this->sections[$this->sectioning], array(
-                '__parent__' => ob_get_clean(),
-            ));
+        throw new \LogicException("Template not found: '{$template}'.");
+    }
+
+    public function getTemplateDirectories(string $template): array
+    {
+        if (false === $pos = strpos($template, ':')) {
+            $directories = $this->directories['default'];
+            $file = $template;
         } else {
-            $this->sections[$this->sectioning] = ob_get_clean();
+            $directories = $this->directories[substr($template, 0, $pos)] ?? null;
+            $file = substr($template, $pos + 1);
         }
 
-        if ($flush) {
-            echo $this->sections[$this->sectioning];
+        if (!$directories) {
+            throw new \LogicException("Directory not exists for template: '{$template}'.");
         }
 
-        $this->sectioning = null;
+        return array($directories, $file);
     }
 
-    public function endFlush(): void
+    public function chain($value, string $functions)
     {
-        $this->end(true);
-    }
+        $result = $value;
 
-    protected function replace(string $content, array $search): string
-    {
-        $replaces = array();
+        foreach (Common::parseExpression($functions) as $function => $arguments) {
+            if ('chain' === strtolower($function)) {
+                throw new \BadFunctionCallException("Recursive chain is not supported.");
+            }
 
-        foreach ($search as $key => $sectionName) {
-            $replaces[$key] = $this->sections[$sectionName] ?? null;
+            $result = $this->$function($value, ...$arguments);
         }
 
-        return strtr($content, $replaces);
+        return $result;
+    }
+
+    public function escape(?string $data, string $functions = null): string
+    {
+        $useData = $functions ? $this->chain($data, $functions) : $data;
+
+        return htmlspecialchars($useData ?? '', $this->options['escapeFlags'], $this->options['escapeEncoding']);
     }
 }

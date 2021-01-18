@@ -1,10 +1,10 @@
 <?php
 
-use Ekok\Web\TemplateEngine;
+use Ekok\Web\Template;
 
 describe('Template Engine', function() {
     beforeEach(function() {
-        $this->template = new TemplateEngine(array(
+        $this->template = new Template(array(
             __DIR__ . '/fixtures/templates',
             'simple' => __DIR__ . '/fixtures/templates/simple',
         ));
