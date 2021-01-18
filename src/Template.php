@@ -23,7 +23,7 @@ class Template
 
     public function __call($name, $arguments)
     {
-        return $this->engine->call($name, ...$arguments);
+        return $this->engine->$name(...$arguments);
     }
 
     public function getEngine(): TemplateEngine

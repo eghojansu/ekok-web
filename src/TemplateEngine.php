@@ -25,6 +25,25 @@ class TemplateEngine
         $this->setOptions($options ?? array());
     }
 
+    public function __call($name, $arguments)
+    {
+        if (isset($this->functions[$name])) {
+            return ($this->functions[$name])(...$arguments);
+        }
+
+        if (isset($this->internals[$name]) || (false !== $found = array_search($name, $this->internals))) {
+            $call = $this->internals[$name] ?? $this->internals[$found];
+
+            return $this->$call(...$arguments);
+        }
+
+        if (function_exists($name)) {
+            return $name(...$arguments);
+        }
+
+        throw new \BadFunctionCallException("Function is not found at any context: {$name}.");
+    }
+
     public function createTemplate(string $template, array $data = null)
     {
         return new Template($this, $template, $data);
@@ -96,25 +115,6 @@ class TemplateEngine
         return $this;
     }
 
-    public function call(string $function, ...$arguments)
-    {
-        if (isset($this->functions[$function])) {
-            return ($this->functions[$function])(...$arguments);
-        }
-
-        if (isset($this->internals[$function]) || (false !== $found = array_search($function, $this->internals))) {
-            $call = $this->internals[$function] ?? $this->internals[$found];
-
-            return $this->$call(...$arguments);
-        }
-
-        if (function_exists($function)) {
-            return $function(...$arguments);
-        }
-
-        throw new \BadFunctionCallException("Function is not found at any context: {$function}.");
-    }
-
     public function findPath(string $template): string
     {
         list($directories, $file) = $this->getTemplateDirectories($template);
@@ -157,7 +157,7 @@ class TemplateEngine
                 throw new \BadFunctionCallException("Recursive chain is not supported.");
             }
 
-            $result = $this->call($function, $value, ...$arguments);
+            $result = $this->$function($value, ...$arguments);
         }
 
         return $result;
