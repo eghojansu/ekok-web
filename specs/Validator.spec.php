@@ -87,6 +87,7 @@ describe('Ekok\Web\Validator', function() {
             'size' => 'size:1',
             'starts_with' => 'starts_with:foo,bar',
             'string' => 'string',
+            'trim' => 'trim',
             'url' => 'url',
         );
         $data = array(
@@ -148,6 +149,7 @@ describe('Ekok\Web\Validator', function() {
             'size' => '1',
             'starts_with' => 'foobar',
             'string' => 'string',
+            'trim' => ' foo ',
             'url' => 'http://example.com',
         );
         $options = array();
@@ -207,6 +209,7 @@ describe('Ekok\Web\Validator', function() {
             'size' => '1',
             'starts_with' => 'foobar',
             'string' => 'string',
+            'trim' => 'foo',
             'url' => 'http://example.com',
         );
         $result = $this->validator->validate($rules, $data, $options);

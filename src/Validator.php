@@ -595,6 +595,11 @@ class Validator
         return is_string($context->getValue());
     }
 
+    protected function _rule_trim(ValidatorContext $context)
+    {
+        return trim($context->getValue());
+    }
+
     protected function _rule_url(ValidatorContext $context): bool
     {
         return (bool) filter_var($context->getValue(), FILTER_VALIDATE_URL);
