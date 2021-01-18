@@ -42,6 +42,8 @@ class Validator
         'match' => 'This value should match with expected pattern.',
         'max' => 'This value should not greater than {argument_0}.',
         'min' => 'This value should not less than {argument_0}.',
+        'max_length' => 'This value is too long. It should have {argument_0} characters or less.',
+        'min_length' => 'This value is too short. It should have {argument_0} characters or more.',
         'not_in' => 'This value is not an option.',
         'not_match' => 'This value should match with expected pattern.',
         'numeric' => 'This value should be numeric.',
@@ -509,9 +511,19 @@ class Validator
         return $context->getSize() <= $length;
     }
 
+    protected function _rule_max_length(ValidatorContext $context, int $length): bool
+    {
+        return strlen($context->getValue()) <= $length;
+    }
+
     protected function _rule_min(ValidatorContext $context, $length): bool
     {
         return $context->getSize() >= $length;
+    }
+
+    protected function _rule_min_length(ValidatorContext $context, int $length): bool
+    {
+        return strlen($context->getValue()) >= $length;
     }
 
     protected function _rule_not_in(ValidatorContext $context, ...$elements): bool
