@@ -10,7 +10,6 @@ class Container implements \ArrayAccess
     protected $frozen = array();
     protected $aliases = array();
     protected $simples = array();
-    protected $methods = array();
     protected $factories;
     protected $protected;
 
@@ -20,17 +19,6 @@ class Container implements \ArrayAccess
         $this->protected = new \SplObjectStorage();
 
         $this->merge($initial ?? array());
-    }
-
-    public function __call($name, $arguments)
-    {
-        if (!isset($this->methods[$name])) {
-            throw new \BadMethodCallException("Method not registered: {$name}.");
-        }
-
-        list($call, $wantThis) = $this->methods[$name];
-
-        return $wantThis ? $call($this, ...$arguments) : $call(...$arguments);
     }
 
     public function offsetExists($key)
@@ -231,18 +219,6 @@ class Container implements \ArrayAccess
         foreach ($values as $key => $value) {
             $this[$key] = $value;
         }
-
-        return $this;
-    }
-
-    public function methods(): array
-    {
-        return $this->methods;
-    }
-
-    public function method(string $name, callable $callable, bool $wantThis = true): Container
-    {
-        $this->methods[$name] = array($callable, $wantThis);
 
         return $this;
     }

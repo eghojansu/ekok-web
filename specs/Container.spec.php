@@ -212,20 +212,4 @@ describe('Ekok\Web\Container', function() {
             $this->container->service('unknown', 'foo');
         })->to->throw('LogicException', 'Callable is not a Closure or invokable object.');
     });
-
-    it('can be extended', function() {
-        $this->container->method('foo', function () {
-            return count(func_get_args());
-        }, false);
-        $this->container->method('bar', function ($container) {
-            return get_class($container);
-        });
-
-        expect($this->container->methods())->to->have->length(2);
-        expect($this->container->foo(1, 2, 3))->to->be->equal(3);
-        expect($this->container->bar())->to->be->equal(Container::class);
-        expect(function () {
-            $this->container->unknown();
-        })->to->throw('BadMethodCallException', "Method not registered: unknown.");
-    });
 });
