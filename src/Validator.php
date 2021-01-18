@@ -68,7 +68,7 @@ class Validator
         return $this->messages;
     }
 
-    public function setMessage(string $rule, string $message): Validator
+    public function addMessage(string $rule, string $message): Validator
     {
         $this->messages[$rule] = $message;
 
@@ -78,7 +78,7 @@ class Validator
     public function setMessages(array $messages): Validator
     {
         foreach ($messages as $rule => $message) {
-            $this->setMessage($rule, $message);
+            $this->addMessage($rule, $message);
         }
 
         return $this;
@@ -89,12 +89,12 @@ class Validator
         return $this->rules;
     }
 
-    public function setRule(string $rule, callable $callable, string $message = null): Validator
+    public function addRule(string $rule, callable $callable, string $message = null): Validator
     {
         $this->rules[$rule] = $callable;
 
         if ($message) {
-            $this->setMessage($rule, $message);
+            $this->addMessage($rule, $message);
         }
 
         return $this;
@@ -103,7 +103,7 @@ class Validator
     public function setRules(array $rules): Validator
     {
         foreach ($rules as $rule => $callable) {
-            $this->setRule($rule, $callable);
+            $this->addRule($rule, $callable);
         }
 
         return $this;

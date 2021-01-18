@@ -14,7 +14,7 @@ describe('Ekok\Web\Validator', function() {
         $this->validator->setRules(array(
             'foo' => 'trim',
         ));
-        $this->validator->setRule('bar', 'trim', 'baz');
+        $this->validator->addRule('bar', 'trim', 'baz');
 
         expect($this->validator->getMessages())->to->include->keys(array('foo', 'bar'));
         expect($this->validator->getRules())->to->be->equal(array('foo' => 'trim', 'bar' => 'trim'));
@@ -225,7 +225,7 @@ describe('Ekok\Web\Validator', function() {
     });
 
     it('can show violations', function() {
-        $this->validator->setRule('foo', function() {
+        $this->validator->addRule('foo', function() {
             return false;
         }, '"{value}" is not an option.');
 
