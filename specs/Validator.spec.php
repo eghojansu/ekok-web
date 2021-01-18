@@ -79,7 +79,7 @@ describe('Ekok\Web\Validator', function() {
             'not_in' => 'not_in:a,b,c',
             'not_match' => 'not_match:/^foo$/',
             'numeric' => 'numeric',
-            'optional' => 'optional',
+            'optional' => 'optional:true',
             'required' => 'required',
             'required_if' => 'required_if:email,email@example.com',
             'required_if2' => array('required_if' => array(function() { return true; })),
