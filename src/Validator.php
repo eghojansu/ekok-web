@@ -548,10 +548,14 @@ class Validator
         return $check;
     }
 
-    protected function _rule_optional(ValidatorContext $context): bool
+    protected function _rule_optional(ValidatorContext $context, bool $exclude = true): bool
     {
         if (in_array($context->getValue(), array('', null), true)) {
             $context->skip();
+
+            if ($exclude) {
+                $context->exclude();
+            }
         }
 
         return true;

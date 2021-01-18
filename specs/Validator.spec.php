@@ -205,7 +205,7 @@ describe('Ekok\Web\Validator', function() {
             'not_in' => 'd',
             'not_match' => 'bar',
             'numeric' => 123.45,
-            'optional' => null,
+            // optional excluded
             'required' => 'foo',
             'required_if' => 'foo',
             'required_if2' => 'foo',
