@@ -248,8 +248,8 @@ class Fw implements \ArrayAccess
         if (false !== strpos($path, '@')) {
             $used = array();
             $defaults = $this->routes[$path][0]['defaults'] ?? null;
-            $result = preg_replace_callback('~(?:@([\w]+)([*])?)~', static function ($match) use ($alias, $parameters, $defaults, &$used) {
-                $name = $match[1];
+            $result = preg_replace_callback('~(?:@([\w:]+)([*])?)~', static function ($match) use ($alias, $parameters, $defaults, &$used) {
+                list($name) = explode(':', $match[1]);
                 $modifier = $match[2] ?? null;
                 $value = $parameters[$name] ?? $defaults[$name] ?? null;
                 $used[$name] = true;
@@ -399,10 +399,10 @@ class Fw implements \ArrayAccess
         $wild = $path;
 
         if (false !== strpos($path, '@')) {
-            $wild = preg_replace_callback('~(?:@([\w]+)([*])?)~', static function($match) use ($requirements) {
-                $name = $match[1];
+            $wild = preg_replace_callback('~(?:@([\w:]+)([*])?)~', static function($match) use ($requirements) {
+                list($name, $characterClass) = explode(':', $match[1]) + array(1 => null);
                 $modifier = $match[2] ?? null;
-                $pattern = $requirements[$name] ?? ('*' === $modifier ? '.*' : '[^/]+');
+                $pattern = $requirements[$name] ?? ('*' === $modifier ? '.*' : ($characterClass ? '[[:' . $characterClass . ':]]+' : '[^/]+'));
 
                 return "(?<{$name}>{$pattern})";
             }, $path);

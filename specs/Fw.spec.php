@@ -89,12 +89,13 @@ describe('Ekok\Web\Fw', function() {
         $this->fw->route('GET /parameter-eater/@data*', 'eater');
         $this->fw->route('GET /parameter-eater2/@data*/@extra1/@extra2', 'eater');
         $this->fw->route('GET /requirement/@id', 'requirement', array('requirements' => array('id' => '\d+')));
+        $this->fw->route('GET /requirement-with-character-class/@id:digit', 'requirement');
 
         $routes = $this->fw->routes();
         $aliases = $this->fw->aliases();
 
         expect($aliases)->to->be->include->keys(array('home', 'data'));
-        expect($routes)->to->have->length(6);
+        expect($routes)->to->have->length(7);
 
         // register invalid routes
         expect(function() {
@@ -160,6 +161,30 @@ describe('Ekok\Web\Fw', function() {
                 'parameters' => array('data' => '1/2/3', 'extra1' => 'foo', 'extra2' => 'bar'),
             ),
         ));
+
+        // with requirement
+        expect($this->fw->findMatchedRoutes('/requirement/123'))->to->be->equal(array(
+            array(
+                'methods' => array('GET'),
+                'controller' => 'requirement',
+                'options' => array(
+                    'requirements' => array('id' => '\d+'),
+                ),
+                'alias' => '',
+                'path' => '/requirement/@id',
+                'parameters' => array('id' => '123'),
+            ),
+        ));
+        expect($this->fw->findMatchedRoutes('/requirement-with-character-class/123'))->to->be->equal(array(
+            array(
+                'methods' => array('GET'),
+                'controller' => 'requirement',
+                'options' => null,
+                'alias' => '',
+                'path' => '/requirement-with-character-class/@id:digit',
+                'parameters' => array('id' => '123'),
+            ),
+        ));
     });
 
     it('should able to build route', function() {
@@ -167,7 +192,7 @@ describe('Ekok\Web\Fw', function() {
         $this->fw['ENTRY_SCRIPT'] = true;
         $this->fw['ENTRY'] = 'test.php';
 
-        $this->fw->route('GET foo /foo/@bar', 'none');
+        $this->fw->route('GET foo /foo/@bar:digit', 'none');
         $this->fw->route('GET bar /foo/@bar*', 'none');
         $this->fw->route('GET baz /foo/baz', 'none');
 
