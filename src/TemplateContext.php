@@ -62,9 +62,11 @@ class TemplateContext
             $content = ob_get_clean();
 
             if ($this->parent) {
-                list($template, $data) = $this->parent;
-                $parent = $this->engine->createTemplate($template, $data + $this->data);
+                list($template, $data, $filepath) = $this->parent;
+                $parent = $this->engine->createTemplate($template, $data);
+                $parent->addData($this->data);
                 $parent->merge(compact('content') + $this->sections);
+                $parent->filepath = $filepath;
                 $content = $parent->render();
 
                 return $this->search ? $parent->replace($content, $this->search) : $content;
@@ -80,7 +82,9 @@ class TemplateContext
 
     public function load(string $view, array $data = null): string
     {
-        $template = $this->engine->createTemplate($view, array_merge($this->data ?? array(), $data ?? array()));
+        $template = $this->engine->createTemplate($view, $data);
+        $template->addData($this->data);
+        $template->filepath = '.' === $view[0] ? $this->resolveRelative($view) : null;
 
         if ($template->getFilepath() === $this->getFilepath()) {
             throw new \LogicException("Recursive view rendering is not supported.");
@@ -98,16 +102,22 @@ class TemplateContext
         }
     }
 
-    public function addData(string $name, $value): TemplateContext
+    public function addData(array $data): TemplateContext
     {
-        $this->data[$name] = $value;
+        foreach ($data as $key => $value) {
+            $this->data[$key] = $value;
+        }
 
         return $this;
     }
 
     public function extend(string $parent, array $data = null): void
     {
-        $this->parent = array($parent, $data ?? array());
+        $this->parent = array(
+            $parent,
+            $data ?? array(),
+            '.' === $parent[0] ? $this->resolveRelative($parent) : null,
+        );
     }
 
     public function parent(): void
@@ -193,5 +203,19 @@ class TemplateContext
         }
 
         return strtr($content, $replaces);
+    }
+
+    protected function resolveRelative(string $view): string
+    {
+        $relative = dirname($this->getFilepath()) . '/' . $view;
+
+        if (
+            !($realpath = realpath($relative))
+            && !($realpath = realpath($relative . '.' . $this->engine->getOptions()['extension']))
+        ) {
+            throw new \LogicException("Relative view not found: '{$view}'.");
+        }
+
+        return $realpath;
     }
 }

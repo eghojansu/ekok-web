@@ -112,11 +112,23 @@ describe('Template Engine', function() {
     it('can be used like blade template concept', function() {
         $template = $this->template->createTemplate('blade/profile.php');
 
-        $template->addData('foo', 'bar');
+        $template->addData(array('foo' => 'bar'));
         $content = $template->render();
         $expected = '/Default body content.[\h\v]+This is body from profile.[\h\v]+Default body content 2./';
 
         expect($template->getName())->to->be->equal('blade/profile.php');
         expect($content)->to->match($expected);
+    });
+
+    it('can use relative path', function() {
+        $content = $this->template->render('relative/template.php');
+
+        expect($content)->to->be->contain('From template.');
+        expect($content)->to->be->contain('From My Relative1.');
+        expect($content)->to->be->contain('From My Relative2.');
+
+        expect(function () {
+            $this->template->render('relative/template', array('loadUnrelative' => true));
+        })->to->throw('LogicException', "Relative view not found: './unknown_relative'.");
     });
 });
